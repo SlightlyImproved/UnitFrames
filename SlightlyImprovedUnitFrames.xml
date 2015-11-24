@@ -1,0 +1,31 @@
+<GuiXml>
+    <Font name="SiufBarFont" font="$(MEDIUM_FONT)|16|soft-shadow-thick"/>
+    <Font name="SiufBarFontSmall" font="$(MEDIUM_FONT)|13|soft-shadow-thick"/>
+    <Font name="SiufGroupFrameFont" font="$(BOLD_FONT)|14|soft-shadow-thin"/>
+
+    <Controls>
+        <Label name="SiufGroupBarText" font="SiufBarFontSmall" layer="3" tier="2" level="1" virtual="true">
+            <Anchor point="TOP" relativePoint="BOTTOM" offsetY="-13" />
+        </Label>
+
+        <Label name="SiufGroupLevelText" font="SiufGroupFrameFont" color="INTERFACE_COLOR_TYPE_TEXT_COLORS:INTERFACE_TEXT_COLOR_NORMAL" virtual="true">
+            <Anchor point="LEFT" relativeTo="$(parent)Name" relativePoint="RIGHT" offsetX="-56" />
+        </Label>
+
+        <Label name="SiufGroupTagText" font="ZoFontGameSmall" virtual="true">
+            <Anchor point="BOTTOMLEFT" relativeTo="$(parent)Name" relativePoint="TOPLEFT" />
+        </Label>
+
+        <Texture name="SiufGroupClassIcon" mouseEnabled="true" layer="OVERLAY" virtual="true">
+            <Anchor point="LEFT" />
+            <Dimensions x="32" y="32"/>
+            <OnMouseEnter>
+                InitializeTooltip(InformationTooltip, self, LEFT, 0, 0)
+                SetTooltipText(InformationTooltip, self.tooltipText)
+            </OnMouseEnter>
+            <OnMouseExit>
+                ClearTooltip(InformationTooltip)
+            </OnMouseExit>
+        </Texture>
+    </Controls>
+</GuiXml>

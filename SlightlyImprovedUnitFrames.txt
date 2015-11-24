@@ -1,0 +1,9 @@
+## APIVersion: 100013
+## Title: SlightlyImprovedUnitFrames
+## Description: ...
+## Version: 0.1.0beta
+## Author: haggen
+## License: CC-BY-NC-SA-4.0
+
+SlightlyImprovedUnitFrames.lua
+SlightlyImprovedUnitFrames.xml
