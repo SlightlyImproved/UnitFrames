@@ -1,3 +1,8 @@
+<!--
+SlightlyImprovedUnitFrames 0.2.0beta
+Licensed under CC-BY-NC-SA-4.0
+-->
+
 <GuiXml>
     <Font name="SiufBarFont" font="$(MEDIUM_FONT)|16|soft-shadow-thick"/>
     <Font name="SiufBarFontSmall" font="$(MEDIUM_FONT)|13|soft-shadow-thick"/>

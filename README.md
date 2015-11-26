@@ -4,8 +4,8 @@
 
 ## What does it do?
 
-1. Show current pool, max pool and percentage on unit frame health bars.
-2. Show player class on its unit frames (with level or VR in the tooltip).
+1. Shows current pool, max pool and percentage on group unit frame health bars.
+2. Shows player's class icon with a tooltip that says the class name and player level.
 
 ## License
 
