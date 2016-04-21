@@ -1,4 +1,4 @@
--- SlightlyImprovedUnitFrames 0.2.0beta
+-- SlightlyImprovedUnitFrames 0.3.0beta
 -- Licensed under CC-BY-NC-SA-4.0
 
 local SIUF = "SlightlyImprovedUnitFrames"
@@ -40,6 +40,32 @@ local function Siuf_UpdateGroupClassIcon(control, classId, gender, level, vetera
     control:SetTexture(GetClassIcon(classId))
 end
 
+local function Siuf_OverrideNameSetText(unitFrame)
+    -- TODO: Create add-on menu with color selection?
+    local COLOR_PLAYER = "00AAFF"
+    local COLOR_LEADER = "00FF00"
+    local COLOR_FRIEND = "FFFF00"
+
+    -- Internal helper function for readability
+    local function IsUnitLocalPlayer(unitTag)
+        return unitTag == GetGroupUnitTagByIndex(GetGroupIndexByUnitTag("player"))
+    end
+
+    local unitTag = unitFrame.unitTag
+
+    local func_orig = unitFrame.nameLabel.SetText
+    unitFrame.nameLabel.SetText = function(me, text)
+            if IsUnitLocalPlayer(unitTag) then
+                text = "|c"..COLOR_PLAYER..text.."|r"
+            elseif IsUnitGroupLeader(unitTag) then
+                text = "|c"..COLOR_LEADER..text.."|r"
+            elseif IsUnitFriend(unitTag) then
+                text = "|c"..COLOR_FRIEND..text.."|r"
+            end
+            func_orig(me, text)
+        end
+end
+
 --
 --
 --
@@ -64,6 +90,9 @@ local function Siuf_ImproveGroupUnitFrame(unitFrame)
     local level = GetUnitLevel(unitTag)
     local veteranRank = GetUnitVeteranRank(unitTag)
     Siuf_UpdateGroupClassIcon(unitFrame.siufClassIcon, classId, gender, level, veteranRank)
+    
+    -- Update nameLabel:SetText function
+    Siuf_OverrideNameSetText(unitFrame)
 
     -- DEBUG: Display unit tag
     -- unitFrame.siufTagText = Siuf_CreateControl("SiufTagText", unitFrame.frame, "SiufGroupTagText")
@@ -73,62 +102,116 @@ local function Siuf_ImproveGroupUnitFrame(unitFrame)
 end
 
 local function Siuf_ShouldImproveUnitFrame(unitFrame)
-    return (unitFrame and not unitFrame.hasBeenSlightlyImproved and string.find(unitFrame.unitTag, "group", 1, true) == 1 and IsUnitOnline(unitFrame.unitTag))
+    return unitFrame and (not unitFrame.hasBeenSlightlyImproved) and IsUnitOnline(unitFrame.unitTag) and (GetGroupSize() <= 4)
 end
 
 local function Siuf_ShouldUpdateUnitFrame(unitFrame)
-    return (unitFrame and unitFrame.hasBeenSlightlyImproved and string.find(unitFrame.unitTag, "group", 1, true) == 1 and IsUnitOnline(unitFrame.unitTag))
+    return unitFrame.hasBeenSlightlyImproved
 end
 
 --
 --
 --
-
-local function OnUnitCreated(event, unitTag)
-    d("Unit created", unitTag)
-    local unitFrame = ZO_UnitFrames_GetUnitFrame(unitTag)
-    if Siuf_ShouldImproveUnitFrame(unitFrame) then
-        Siuf_ImproveGroupUnitFrame(unitFrame)
-    end
-end
 
 local function OnPowerUpdate(event, unitTag, powerPoolIndex, powerType, powerPool, powerPoolMax)
-    d("Power update", unitTag)
-    local unitFrame = ZO_UnitFrames_GetUnitFrame(unitTag)
-    if Siuf_ShouldUpdateUnitFrame(unitFrame) then
-        local healthPool, maxHealthPool = GetUnitPower(unitTag, POWERTYPE_HEALTH)
-        Siuf_UpdateGroupBarText(unitFrame.siufHealthBarText, healthPool, maxHealthPool)
+    if ZO_Group_IsGroupUnitTag(unitTag) then
+        d("Power update", unitTag)
+        local unitFrame = ZO_UnitFrames_GetUnitFrame(unitTag)
+        if Siuf_ShouldUpdateUnitFrame(unitFrame) then
+            local healthPool, maxHealthPool = GetUnitPower(unitTag, POWERTYPE_HEALTH)
+            Siuf_UpdateGroupBarText(unitFrame.siufHealthBarText, healthPool, maxHealthPool)
+        end
     end
 end
 
 local function OnLevelUpdate(event, unitTag)
-    d("Level update", unitTag)
-    local unitFrame = ZO_UnitFrames_GetUnitFrame(unitTag)
-    if Siuf_ShouldUpdateUnitFrame(unitFrame) then
-        local classId = GetUnitClassId(unitTag)
-        local gender = GetUnitGender(unitTag)
-        local level = GetUnitLevel(unitTag)
-        local veteranRank = GetUnitVeteranRank(unitTag)
-        Siuf_UpdateGroupClassIcon(unitFrame.siufClassIcon, classId, gender, level, veteranRank)
+    if ZO_Group_IsGroupUnitTag(unitTag) then
+        d("Level update", unitTag)
+        local unitFrame = ZO_UnitFrames_GetUnitFrame(unitTag)
+        if Siuf_ShouldUpdateUnitFrame(unitFrame) then
+            local classId = GetUnitClassId(unitTag)
+            local gender = GetUnitGender(unitTag)
+            local level = GetUnitLevel(unitTag)
+            local veteranRank = GetUnitVeteranRank(unitTag)
+            Siuf_UpdateGroupClassIcon(unitFrame.siufClassIcon, classId, gender, level, veteranRank)
+        end
     end
 end
 
 local function OnVeteranRankUpdate(event, unitTag)
-    d("VR update", unitTag)
-    local unitFrame = ZO_UnitFrames_GetUnitFrame(unitTag)
-    if Siuf_ShouldUpdateUnitFrame(unitFrame) then
-        local classId = GetUnitClassId(unitTag)
-        local gender = GetUnitGender(unitTag)
-        local level = GetUnitLevel(unitTag)
-        local veteranRank = GetUnitVeteranRank(unitTag)
-        Siuf_UpdateGroupClassIcon(unitFrame.siufClassIcon, classId, gender, level, veteranRank)
+    if ZO_Group_IsGroupUnitTag(unitTag) then
+        d("VR update", unitTag)
+        local unitFrame = ZO_UnitFrames_GetUnitFrame(unitTag)
+        if Siuf_ShouldUpdateUnitFrame(unitFrame) then
+            local classId = GetUnitClassId(unitTag)
+            local gender = GetUnitGender(unitTag)
+            local level = GetUnitLevel(unitTag)
+            local veteranRank = GetUnitVeteranRank(unitTag)
+            Siuf_UpdateGroupClassIcon(unitFrame.siufClassIcon, classId, gender, level, veteranRank)
+        end
     end
 end
 
-local function OnPlayerActivated(event, ...)
-    for unitTag, unitFrame in pairs(UNIT_FRAMES.groupFrames) do
-        d(unitTag, Siuf_ShouldImproveUnitFrame(unitFrame))
+local function OnUnitCreated(event, unitTag)
+    if ZO_Group_IsGroupUnitTag(unitTag) then
+        d("Unit created", unitTag)
 
+        local pollCount = 0
+        local pollLimit = 20
+        local pollInterval = 100
+        local pollGroupUnitFrame
+
+        pollGroupUnitFrame = function()
+            local unitFrame = ZO_UnitFrames_GetUnitFrame(unitTag)
+            if unitFrame then
+                if Siuf_ShouldImproveUnitFrame(unitFrame) then
+                    Siuf_ImproveGroupUnitFrame(unitFrame)
+                end
+            else
+                if (pollCount < pollLimit) then
+                    zo_callLater(pollGroupUnitFrame, pollInterval)
+                    pollCount = pollCount + 1
+                else
+                    d("Group unit frame was not ready in due time")
+                end
+            end
+        end
+
+        pollGroupUnitFrame()
+    end
+end
+
+local function OnPlayerActivated()
+    if IsUnitGrouped("player") and (GetGroupSize() <= 4) then
+        local pollCount = 0
+        local pollLimit = 10
+        local pollInterval = 500
+        local pollGroupUnitFrames
+
+        pollGroupUnitFrames = function()
+            if (UNIT_FRAMES.groupSize > 0) then
+                for unitTag, unitFrame in pairs(UNIT_FRAMES.groupFrames) do
+                    if (Siuf_ShouldImproveUnitFrame(unitFrame)) then
+                        Siuf_ImproveGroupUnitFrame(unitFrame)
+                    end
+                end
+            else
+                if (pollCount < pollLimit) then
+                    zo_callLater(pollGroupUnitFrames, pollInterval)
+                    pollCount = pollCount + 1
+                else
+                    d("Group unit frames were not ready in due time")
+                end
+            end
+        end
+
+        pollGroupUnitFrames()
+    end
+end
+
+local function OnGroupMemberConnectedStatus(event, unitTag)
+    if IsUnitOnline(unitTag) then
+        local unitFrame = ZO_UnitFrames_GetUnitFrame(unitTag)
         if Siuf_ShouldImproveUnitFrame(unitFrame) then
             Siuf_ImproveGroupUnitFrame(unitFrame)
         end
@@ -139,8 +222,52 @@ local function OnAddOnLoaded(event, addOnName)
     if (addOnName == SIUF) then
         EVENT_MANAGER:UnregisterForEvent(SIUF, EVENT_ADD_ON_LOADED)
 
-        EVENT_MANAGER:RegisterForEvent(SIUF, EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
+        -- local events =
+        -- {
+        --     [EVENT_GROUP_INVITE_ACCEPT_RESPONSE_TIMEOUT] = "GROUP_INVITE_ACCEPT_RESPONSE_TIMEOUT",
+        --     [EVENT_GROUP_INVITE_RECEIVED] = "GROUP_INVITE_RECEIVED",
+        --     [EVENT_GROUP_INVITE_REMOVED] = "GROUP_INVITE_REMOVED",
+        --     [EVENT_GROUP_INVITE_RESPONSE] = "GROUP_INVITE_RESPONSE",
+        --     [EVENT_GROUP_MEMBER_CONNECTED_STATUS] = "GROUP_MEMBER_CONNECTED_STATUS",
+        --     [EVENT_GROUP_MEMBER_IN_REMOTE_REGION] = "GROUP_MEMBER_IN_REMOTE_REGION",
+        --     [EVENT_GROUP_MEMBER_JOINED] = "GROUP_MEMBER_JOINED",
+        --     [EVENT_GROUP_MEMBER_LEFT] = "GROUP_MEMBER_LEFT",
+        --     [EVENT_GROUP_MEMBER_ROLES_CHANGED] = "GROUP_MEMBER_ROLES_CHANGED",
+        --     [EVENT_GROUP_NOTIFICATION_MESSAGE] = "GROUP_NOTIFICATION_MESSAGE",
+        --     [EVENT_GROUP_SUPPORT_RANGE_UPDATE] = "GROUP_SUPPORT_RANGE_UPDATE",
+        --     [EVENT_GROUP_TYPE_CHANGED] = "GROUP_TYPE_CHANGED",
+        --     [EVENT_GROUP_UPDATE] = "GROUP_UPDATE",
+        --     [EVENT_LEADER_UPDATE] = "LEADER_UPDATE",
+        --     [EVENT_PLAYER_ACTIVATED] = "PLAYER_ACTIVATED",
+        --     [EVENT_UNIT_FRAME_UPDATE] = "UNIT_FRAME_UPDATE",
+        --     [EVENT_UNIT_CREATED] = "UNIT_CREATED",
+        -- }
+
+        -- SIUF_EVENT_LOG = {}
+        --
+        -- for e, name in pairs(events) do
+        --     EVENT_MANAGER:RegisterForEvent(SIUF, e, function(event, ...)
+        --         local t = {..., ["GetGameTimeMilliseconds"] = GetGameTimeMilliseconds(), ["event"] = name, ["IsPlayerGrouped"] = IsUnitGrouped("player"), ["GetGroupSize"] = GetGroupSize(), ["UNIT_FRAMES.groupFrames"] = #UNIT_FRAMES.groupFrames}
+        --         table.insert(SIUF_EVENT_LOG, t)
+        --
+        --         if (event == EVENT_UNIT_CREATED) then
+        --             OnUnitCreated(event, ...)
+        --         end
+        --
+        --         if (event == EVENT_GROUP_MEMBER_CONNECTED_STATUS) then
+        --             OnGroupMemberConnectedStatus(event, ...)
+        --         end
+        --
+        --         if (event == EVENT_PLAYER_ACTIVATED) then
+        --             OnPlayerActivated(event, ...)
+        --         end
+        --     end)
+        -- end
+
         EVENT_MANAGER:RegisterForEvent(SIUF, EVENT_UNIT_CREATED, OnUnitCreated)
+        EVENT_MANAGER:RegisterForEvent(SIUF, EVENT_PLAYER_ACTIVATED, OnPlayerActivated)
+        EVENT_MANAGER:RegisterForEvent(SIUF, EVENT_GROUP_MEMBER_CONNECTED_STATUS, OnGroupMemberConnectedStatus)
+
         EVENT_MANAGER:RegisterForEvent(SIUF, EVENT_POWER_UPDATE, OnPowerUpdate)
         EVENT_MANAGER:RegisterForEvent(SIUF, EVENT_LEVEL_UPDATE, OnLevelUpdate)
         EVENT_MANAGER:RegisterForEvent(SIUF, EVENT_VETERAN_RANK_UPDATE, OnVeteranRankUpdate)
