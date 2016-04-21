@@ -40,6 +40,32 @@ local function Siuf_UpdateGroupClassIcon(control, classId, gender, level, vetera
     control:SetTexture(GetClassIcon(classId))
 end
 
+local function Siuf_OverrideNameSetText(unitFrame)
+    -- TODO: Create add-on menu with color selection?
+    local COLOR_PLAYER = "00AAFF"
+    local COLOR_LEADER = "00FF00"
+    local COLOR_FRIEND = "FFFF00"
+
+    -- Internal helper function for readability
+    local function IsUnitLocalPlayer(unitTag)
+        return unitTag == GetGroupUnitTagByIndex(GetGroupIndexByUnitTag("player"))
+    end
+
+    local unitTag = unitFrame.unitTag
+
+    local func_orig = unitFrame.nameLabel.SetText
+    unitFrame.nameLabel.SetText = function(me, text)
+            if IsUnitLocalPlayer(unitTag) then
+                text = "|c"..COLOR_PLAYER..text.."|r"
+            elseif IsUnitGroupLeader(unitTag) then
+                text = "|c"..COLOR_LEADER..text.."|r"
+            elseif IsUnitFriend(unitTag) then
+                text = "|c"..COLOR_FRIEND..text.."|r"
+            end
+            func_orig(me, text)
+        end
+end
+
 --
 --
 --
@@ -64,6 +90,9 @@ local function Siuf_ImproveGroupUnitFrame(unitFrame)
     local level = GetUnitLevel(unitTag)
     local veteranRank = GetUnitVeteranRank(unitTag)
     Siuf_UpdateGroupClassIcon(unitFrame.siufClassIcon, classId, gender, level, veteranRank)
+    
+    -- Update nameLabel:SetText function
+    Siuf_OverrideNameSetText(unitFrame)
 
     -- DEBUG: Display unit tag
     -- unitFrame.siufTagText = Siuf_CreateControl("SiufTagText", unitFrame.frame, "SiufGroupTagText")
