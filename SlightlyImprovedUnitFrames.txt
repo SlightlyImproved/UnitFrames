@@ -1,9 +1,16 @@
-## APIVersion: 100013
+## APIVersion: 100017 100016
 ## Title: SlightlyImprovedUnitFrames
-## Description: ...
-## Version: 0.2.0beta
+## Description: Shows current pool, max pool and percentage on group unit frame health bars. Shows player's class icon with a tooltip that says the class name and player level.
+## Version: 0.4.0 beta_250816
 ## Author: haggen
+## OptionalDependsOn: GroupRegenTracker
 ## License: CC-BY-NC-SA-4.0
+
+## This Add-on is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. 
+## The Elder Scrolls® and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. All rights reserved. You can read the full terms at https://account.elderscrollsonline.com/add-on-terms
 
 SlightlyImprovedUnitFrames.lua
 SlightlyImprovedUnitFrames.xml
+
+lang/en.lua
+lang/$(language).lua
